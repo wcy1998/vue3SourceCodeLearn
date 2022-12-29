@@ -1,3 +1,5 @@
+//inject Api
+
 import { isFunction } from '@vue/shared'
 import { currentInstance } from './component'
 import { currentRenderingInstance } from './componentRenderContext'

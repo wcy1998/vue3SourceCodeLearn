@@ -4,6 +4,8 @@ import { warn } from './warning'
 let activeEffectScope: EffectScope | undefined
 const effectScopeStack: EffectScope[] = []
 
+
+//副作用 作用域
 export class EffectScope {
   active = true
   effects: ReactiveEffect[] = []

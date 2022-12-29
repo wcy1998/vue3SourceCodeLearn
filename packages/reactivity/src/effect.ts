@@ -10,30 +10,33 @@ import {
   wasTracked
 } from './dep'
 
-// The main WeakMap that stores {target -> key -> dep} connections.
-// Conceptually, it's easier to think of a dependency as a Dep class
-// which maintains a Set of subscribers, but we simply store them as
-// raw Sets to reduce memory overhead.
+
+//主要存储 target=>key=>dep关系的map
+//概念上来说，将依赖项视为Dep对象更容易
+//dep对象维护了一系列的订阅者但我们只是将它们存储为
+//原始集合以减少内存开销
 type KeyToDepMap = Map<any, Dep>
+
 const targetMap = new WeakMap<any, KeyToDepMap>()
 
-// The number of effects currently being tracked recursively.
+//副作用追踪的递归深度
 let effectTrackDepth = 0
 
 export let trackOpBit = 1
 
-/**
- * The bitwise track markers support at most 30 levels op recursion.
- * This value is chosen to enable modern JS engines to use a SMI on all platforms.
- * When recursion depth is greater, fall back to using a full cleanup.
- */
+
+//递归深度只支持到30级，选择此值是为了使现代 JS 引擎能够在所有平台上使用 SMI
+//当递归深度更大时，回退到使用完全清理
 const maxMarkerBits = 30
+
 
 export type EffectScheduler = (...args: any[]) => any
 
 export type DebuggerEvent = {
   effect: ReactiveEffect
 } & DebuggerEventExtraInfo
+
+
 
 export type DebuggerEventExtraInfo = {
   target: object
@@ -44,12 +47,20 @@ export type DebuggerEventExtraInfo = {
   oldTarget?: Map<any, any> | Set<any>
 }
 
+
+//副作用堆栈
 const effectStack: ReactiveEffect[] = []
+
+//激活的副作用
 let activeEffect: ReactiveEffect | undefined
 
+
 export const ITERATE_KEY = Symbol(__DEV__ ? 'iterate' : '')
+
 export const MAP_KEY_ITERATE_KEY = Symbol(__DEV__ ? 'Map key iterate' : '')
 
+
+//响应式副作用
 export class ReactiveEffect<T = any> {
   active = true
   deps: Dep[] = []
@@ -114,6 +125,7 @@ export class ReactiveEffect<T = any> {
   }
 }
 
+//清除副作用
 function cleanupEffect(effect: ReactiveEffect) {
   const { deps } = effect
   if (deps.length) {
@@ -142,6 +154,7 @@ export interface ReactiveEffectRunner<T = any> {
   effect: ReactiveEffect
 }
 
+//副作用函数
 export function effect<T = any>(
   fn: () => T,
   options?: ReactiveEffectOptions

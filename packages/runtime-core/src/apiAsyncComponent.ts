@@ -1,3 +1,5 @@
+
+//异步组件API
 import {
   Component,
   ConcreteComponent,

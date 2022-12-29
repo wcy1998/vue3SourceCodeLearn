@@ -6,11 +6,16 @@ const doc = (typeof document !== 'undefined' ? document : null) as Document
 
 const staticTemplateCache = new Map<string, DocumentFragment>()
 
+
+//节点操作的相关方法
 export const nodeOps: Omit<RendererOptions<Node, Element>, 'patchProp'> = {
+
+  //插入一个节点
   insert: (child, parent, anchor) => {
     parent.insertBefore(child, anchor || null)
   },
 
+  //移除一个节点
   remove: child => {
     const parent = child.parentNode
     if (parent) {
@@ -18,6 +23,7 @@ export const nodeOps: Omit<RendererOptions<Node, Element>, 'patchProp'> = {
     }
   },
 
+  //创建一个元素
   createElement: (tag, isSVG, is, props): Element => {
     const el = isSVG
       ? doc.createElementNS(svgNS, tag)
@@ -30,28 +36,37 @@ export const nodeOps: Omit<RendererOptions<Node, Element>, 'patchProp'> = {
     return el
   },
 
+  //创建文本
   createText: text => doc.createTextNode(text),
 
+  //创建注释
   createComment: text => doc.createComment(text),
 
+  //设置文本
   setText: (node, text) => {
     node.nodeValue = text
   },
 
+  //设置元素文本
   setElementText: (el, text) => {
     el.textContent = text
   },
 
+  //获取父节点
   parentNode: node => node.parentNode as Element | null,
 
+  //获取兄弟节点
   nextSibling: node => node.nextSibling,
 
+  //查找元素
   querySelector: selector => doc.querySelector(selector),
 
+  //设置作用域id
   setScopeId(el, id) {
     el.setAttribute(id, '')
   },
 
+  //复制节点
   cloneNode(el) {
     const cloned = el.cloneNode(true)
     // #3072

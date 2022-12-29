@@ -58,12 +58,18 @@ export function getBaseTransformPreset(
 
 // we name it `baseCompile` so that higher order compilers like
 // @vue/compiler-dom can export `compile` while re-exporting everything else.
+//基础的编译方法
 export function baseCompile(
-  template: string | RootNode,
-  options: CompilerOptions = {}
+  template: string | RootNode, //template
+  options: CompilerOptions = {} //编译配置
 ): CodegenResult {
+  
+  //报错处理方法
   const onError = options.onError || defaultOnError
+  
+
   const isModuleMode = options.mode === 'module'
+
   /* istanbul ignore if */
   if (__BROWSER__) {
     if (options.prefixIdentifiers === true) {
@@ -82,9 +88,13 @@ export function baseCompile(
     onError(createCompilerError(ErrorCodes.X_SCOPE_ID_NOT_SUPPORTED))
   }
 
+  //将template解析成ast
   const ast = isString(template) ? baseParse(template, options) : template
+
   const [nodeTransforms, directiveTransforms] =
     getBaseTransformPreset(prefixIdentifiers)
+
+  //进行一些信息的转换
   transform(
     ast,
     extend({}, options, {
@@ -101,6 +111,7 @@ export function baseCompile(
     })
   )
 
+  //通过抽象语法树 生成渲染函数代码
   return generate(
     ast,
     extend({}, options, {

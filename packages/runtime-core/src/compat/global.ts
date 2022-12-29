@@ -321,12 +321,17 @@ export function createCompatVue(
   return Vue
 }
 
+
+//安装一些兼容vue2的app实例属性
 export function installAppCompatProperties(
   app: App,
   context: AppContext,
   render: RootRenderFunction
 ) {
+
+  //安装filter相关方法
   installFilterMethod(app, context)
+  //安装历史的合并策略
   installLegacyOptionMergeStrats(app.config)
 
   if (!singletonApp) {
@@ -334,13 +339,18 @@ export function installAppCompatProperties(
     // unnecessary
     return
   }
-
+ 
+  //安装历史的mount方式
   installCompatMount(app, context, render)
+  //安装历史的api
   installLegacyAPIs(app)
+  //安装单例的mutations
   applySingletonAppMutations(app)
+  //安装历史的配置提示
   if (__DEV__) installLegacyConfigWarnings(app.config)
 }
 
+//安装filter的方法
 function installFilterMethod(app: App, context: AppContext) {
   context.filters = {}
   app.filter = (name: string, filter?: Function): any => {
@@ -356,6 +366,7 @@ function installFilterMethod(app: App, context: AppContext) {
   }
 }
 
+//安装遗留的一些api
 function installLegacyAPIs(app: App) {
   // expose global API on app instance for legacy plugins
   Object.defineProperties(app, {
@@ -379,6 +390,7 @@ function installLegacyAPIs(app: App) {
   })
 }
 
+//应用单例的mutations
 function applySingletonAppMutations(app: App) {
   // copy over asset registries and deopt flag
   ;['mixins', 'components', 'directives', 'filters', 'deopt'].forEach(key => {
@@ -416,6 +428,7 @@ function applySingletonAppMutations(app: App) {
   applySingletonPrototype(app, singletonCtor)
 }
 
+//应用单例的属性
 function applySingletonPrototype(app: App, Ctor: Function) {
   // copy prototype augmentations as config.globalProperties
   const enabled = isCompatEnabled(DeprecationTypes.GLOBAL_PROTOTYPE, null)
@@ -441,6 +454,7 @@ function applySingletonPrototype(app: App, Ctor: Function) {
   }
 }
 
+//安装兼容的mount
 function installCompatMount(
   app: App,
   context: AppContext,

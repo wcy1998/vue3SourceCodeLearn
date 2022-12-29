@@ -1,3 +1,5 @@
+//声明周期钩子 Api
+
 import {
   ComponentInternalInstance,
   currentInstance,

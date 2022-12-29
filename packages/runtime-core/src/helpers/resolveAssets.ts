@@ -26,15 +26,20 @@ export function resolveComponent(
   return resolveAsset(COMPONENTS, name, true, maybeSelfReference) || name
 }
 
+
 export const NULL_DYNAMIC_COMPONENT = Symbol()
 
 /**
  * @private
  */
+//解析动态组件
 export function resolveDynamicComponent(component: unknown): VNodeTypes {
+  //如果传入的是字符串
   if (isString(component)) {
     return resolveAsset(COMPONENTS, component, false) || component
-  } else {
+  } else 
+  //传入组件直接返回
+  {
     // invalid types will fallthrough to createVNode and raise warning
     return (component || NULL_DYNAMIC_COMPONENT) as any
   }
@@ -74,19 +79,31 @@ function resolveAsset(
 // overload 3: filters (compat only)
 function resolveAsset(type: typeof FILTERS, name: string): Function | undefined
 // implementation
+
+
 function resolveAsset(
-  type: AssetTypes,
-  name: string,
-  warnMissing = true,
-  maybeSelfReference = false
+  type: AssetTypes, //资源类型
+  name: string, //资源名称
+  warnMissing = true, //是不是进行提示
+  maybeSelfReference = false //是不是自引用
 ) {
+
+  //获取当前的组件实例
   const instance = currentRenderingInstance || currentInstance
+
   if (instance) {
+
+    //获取当前组件实例的 组件配置
     const Component = instance.type
 
-    // explicit self name has highest priority
+    // 明确的组件名有最高优先级
+    //如果是获取组件资源
     if (type === COMPONENTS) {
+      
+      //获取当前组件实例的组件名
       const selfName = getComponentName(Component)
+
+      //如果匹配了就返回组件信息
       if (
         selfName &&
         (selfName === name ||
@@ -97,12 +114,14 @@ function resolveAsset(
       }
     }
 
+    //在组件的注册组件中进行查找 和 全局组件中 进行查找
     const res =
       // local registration
       // check instance[type] first which is resolved for options API
       resolve(instance[type] || (Component as ComponentOptions)[type], name) ||
       // global registration
       resolve(instance.appContext[type], name)
+
 
     if (!res && maybeSelfReference) {
       // fallback to implicit self-reference

@@ -64,11 +64,15 @@ export type EmitFn<
       }[Event]
     >
 
+
+//组件的emit方法
 export function emit(
-  instance: ComponentInternalInstance,
-  event: string,
-  ...rawArgs: any[]
+  instance: ComponentInternalInstance, //组件实例
+  event: string, //事件类型
+  ...rawArgs: any[] //事件参数
 ) {
+
+  //获取组件虚拟节点的props
   const props = instance.vnode.props || EMPTY_OBJ
 
   if (__DEV__) {
@@ -234,9 +238,9 @@ export function normalizeEmitsOptions(
   return normalized
 }
 
-// Check if an incoming prop key is a declared emit event listener.
-// e.g. With `emits: { click: null }`, props named `onClick` and `onclick` are
-// both considered matched listeners.
+
+//检查传入的props key是否是声明的发射事件侦听器。
+// 使用 `emits: { click: null }`，名为 `onClick` 和 `onclick` 的道具都被认为是匹配的监听器
 export function isEmitListener(
   options: ObjectEmitsOptions | null,
   key: string

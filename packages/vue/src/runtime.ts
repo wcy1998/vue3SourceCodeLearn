@@ -1,14 +1,18 @@
 // This entry exports the runtime only, and is built as
 // `dist/vue.esm-bundler.js` which is used by default for bundlers.
+
+//打包工具默认使用的版本 只有运行时版本
 import { initDev } from './dev'
 import { warn } from '@vue/runtime-dom'
-
 if (__DEV__) {
   initDev()
 }
 
+//暴露所有的domApi
 export * from '@vue/runtime-dom'
 
+
+//导出编译函数
 export const compile = () => {
   if (__DEV__) {
     warn(

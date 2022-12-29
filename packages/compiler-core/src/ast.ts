@@ -548,6 +548,7 @@ export const locStub: SourceLocation = {
   end: { line: 1, column: 1, offset: 0 }
 }
 
+//返回一个根虚拟节点
 export function createRoot(
   children: TemplateChildNode[],
   loc = locStub

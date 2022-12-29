@@ -1,3 +1,5 @@
+
+//createApp Api
 import {
   ConcreteComponent,
   Data,
@@ -24,40 +26,42 @@ import { installAppCompatProperties } from './compat/global'
 import { NormalizedPropsOptions } from './componentProps'
 import { ObjectEmitsOptions } from './componentEmits'
 
+
+//app实例类型
 export interface App<HostElement = any> {
-  version: string
-  config: AppConfig
-  use(plugin: Plugin, ...options: any[]): this
-  mixin(mixin: ComponentOptions): this
-  component(name: string): Component | undefined
-  component(name: string, component: Component): this
-  directive(name: string): Directive | undefined
-  directive(name: string, directive: Directive): this
-  mount(
+  version: string  //版本
+  config: AppConfig //app配置
+  use(plugin: Plugin, ...options: any[]): this //使用插件方法
+  mixin(mixin: ComponentOptions): this //使用mixin方法
+  component(name: string): Component | undefined //注册组件方法
+  component(name: string, component: Component): this // 注册组件方法
+  directive(name: string): Directive | undefined //注册指令方法
+  directive(name: string, directive: Directive): this //注册指令方法
+  mount(     //挂载组件方法
     rootContainer: HostElement | string,
     isHydrate?: boolean,
     isSVG?: boolean
   ): ComponentPublicInstance
-  unmount(): void
-  provide<T>(key: InjectionKey<T> | string, value: T): this
+  unmount(): void //卸载组件方法
+  provide<T>(key: InjectionKey<T> | string, value: T): this //provide值方法
 
   // internal, but we need to expose these for the server-renderer and devtools
-  _uid: number
-  _component: ConcreteComponent
-  _props: Data | null
-  _container: HostElement | null
-  _context: AppContext
-  _instance: ComponentInternalInstance | null
+  _uid: number   //app实例id
+  _component: ConcreteComponent  //app对应的组件实例
+  _props: Data | null //app的props
+  _container: HostElement | null //app的容器
+  _context: AppContext //app的上下文
+  _instance: ComponentInternalInstance | null //app组件实例
 
   /**
    * v2 compat only
    */
-  filter?(name: string): Function | undefined
+  filter?(name: string): Function | undefined  //兼容vue2的注册filter
   filter?(name: string, filter: Function): this
 
   /**
    * @internal v3 compat only
-   */
+   */                                        
   _createRoot?(options: ComponentOptions): ComponentPublicInstance
 }
 
@@ -144,65 +148,83 @@ export type Plugin =
       install: PluginInstallFunction
     }
 
+
+//创建app上下文
 export function createAppContext(): AppContext {
   return {
-    app: null as any,
-    config: {
-      isNativeTag: NO,
-      performance: false,
-      globalProperties: {},
-      optionMergeStrategies: {},
-      errorHandler: undefined,
-      warnHandler: undefined,
-      compilerOptions: {}
+    app: null as any,  //app实例
+    config: {  //app的配置
+      isNativeTag: NO, //判断是不是原生tag
+      performance: false, //是不是开启性能检测
+      globalProperties: {}, //全局的一些属性
+      optionMergeStrategies: {}, //合并策略
+      errorHandler: undefined, //错误处理器
+      warnHandler: undefined, //告警处理器
+      compilerOptions: {} //编译配置
     },
-    mixins: [],
-    components: {},
-    directives: {},
-    provides: Object.create(null),
-    optionsCache: new WeakMap(),
-    propsCache: new WeakMap(),
-    emitsCache: new WeakMap()
+    mixins: [], //app的mixin
+    components: {}, //app的组件
+    directives: {}, //app的指令
+    provides: Object.create(null), //app的 provide
+    optionsCache: new WeakMap(), //配置缓存
+    propsCache: new WeakMap(), //props缓存
+    emitsCache: new WeakMap() //emits的缓存
   }
 }
 
+//创建app方法的类型 
 export type CreateAppFunction<HostElement> = (
-  rootComponent: Component,
-  rootProps?: Data | null
+  rootComponent: Component, //组件
+  rootProps?: Data | null //一个配置项
 ) => App<HostElement>
 
 let uid = 0
 
+
+//返回一个创建app实例的方法
 export function createAppAPI<HostElement>(
-  render: RootRenderFunction,
-  hydrate?: RootHydrateFunction
+  render: RootRenderFunction, //渲染方法
+  hydrate?: RootHydrateFunction //服务端渲染方法
 ): CreateAppFunction<HostElement> {
-  return function createApp(rootComponent, rootProps = null) {
+
+  return function createApp(
+    rootComponent,  //根组件
+    rootProps = null //根组件的props
+    ) {
+    
+    //如果传递的根节点props不是object就失效
     if (rootProps != null && !isObject(rootProps)) {
       __DEV__ && warn(`root props passed to app.mount() must be an object.`)
       rootProps = null
     }
-
+    
+    //创建一个app上下文
     const context = createAppContext()
+    
+    //已经安装了的插件
     const installedPlugins = new Set()
 
+    //是不是已经挂载了
     let isMounted = false
 
-    const app: App = (context.app = {
-      _uid: uid++,
-      _component: rootComponent as ConcreteComponent,
-      _props: rootProps,
-      _container: null,
-      _context: context,
-      _instance: null,
 
-      version,
+    //app实例
+    const app: App = (context.app = 
+      {
+      _uid: uid++, //app实例的唯一标识
+      _component: rootComponent as ConcreteComponent, //app实例的组件
+      _props: rootProps, //app实例的根props
+      _container: null, //app实例的容器
+      _context: context, //app实例的上下文
+      _instance: null, //app实例
+ 
+      version, //app实例的版本
 
-      get config() {
+      get config() { //获取app实例的配置
         return context.config
       },
 
-      set config(v) {
+      set config(v) { //不能直接更改app实例
         if (__DEV__) {
           warn(
             `app.config cannot be replaced. Modify individual options instead.`
@@ -210,6 +232,7 @@ export function createAppAPI<HostElement>(
         }
       },
 
+      //app实例安装插件方法
       use(plugin: Plugin, ...options: any[]) {
         if (installedPlugins.has(plugin)) {
           __DEV__ && warn(`Plugin has already been applied to target app.`)
@@ -228,6 +251,7 @@ export function createAppAPI<HostElement>(
         return app
       },
 
+      //app实例mixin对象的方法
       mixin(mixin: ComponentOptions) {
         if (__FEATURE_OPTIONS_API__) {
           if (!context.mixins.includes(mixin)) {
@@ -244,6 +268,7 @@ export function createAppAPI<HostElement>(
         return app
       },
 
+      //app实例注册组件的方法
       component(name: string, component?: Component): any {
         if (__DEV__) {
           validateComponentName(name, context.config)
@@ -258,6 +283,7 @@ export function createAppAPI<HostElement>(
         return app
       },
 
+      //app实例注册指令的方法
       directive(name: string, directive?: Directive) {
         if (__DEV__) {
           validateDirectiveName(name)
@@ -273,33 +299,44 @@ export function createAppAPI<HostElement>(
         return app
       },
 
+      //app实例进行挂载的方法
       mount(
-        rootContainer: HostElement,
-        isHydrate?: boolean,
-        isSVG?: boolean
+        rootContainer: HostElement, //挂载容器dom
+        isHydrate?: boolean, //是不是服务端渲染
+        isSVG?: boolean //挂载对象是不是svg
       ): any {
+        
+        //如果还没有挂载
         if (!isMounted) {
+
+          //创建一个虚拟dom
           const vnode = createVNode(
             rootComponent as ConcreteComponent,
             rootProps
           )
-          // store app context on the root VNode.
-          // this will be set on the root instance on initial mount.
+
+          //将app上下文连接到根虚拟节点
           vnode.appContext = context
 
           // HMR root reload
+          //如果是开发环境添加重载方法用于热更新
           if (__DEV__) {
             context.reload = () => {
               render(cloneVNode(vnode), rootContainer, isSVG)
             }
           }
-
+          
+          //如果是服务端渲染
           if (isHydrate && hydrate) {
             hydrate(vnode as VNode<Node, Element>, rootContainer as any)
           } else {
+          //渲染节点
             render(vnode, rootContainer, isSVG)
           }
+
           isMounted = true
+          
+          
           app._container = rootContainer
           // for devtools and telemetry
           ;(rootContainer as any).__vue_app__ = app
@@ -320,6 +357,7 @@ export function createAppAPI<HostElement>(
         }
       },
 
+      //app实例取消挂载的方法
       unmount() {
         if (isMounted) {
           render(null, app._container)
@@ -333,6 +371,7 @@ export function createAppAPI<HostElement>(
         }
       },
 
+      //app实例provide值的方法
       provide(key, value) {
         if (__DEV__ && (key as string | symbol) in context.provides) {
           warn(
@@ -348,6 +387,7 @@ export function createAppAPI<HostElement>(
       }
     })
 
+    //是否进行兼容 安装一些兼容的属性
     if (__COMPAT__) {
       installAppCompatProperties(app, context, render)
     }

@@ -126,12 +126,18 @@ const normalizeVNodeSlots = (
   instance.slots.default = () => normalized
 }
 
+
+//初始化插槽
 export const initSlots = (
-  instance: ComponentInternalInstance,
-  children: VNodeNormalizedChildren
+  instance: ComponentInternalInstance, //组件实例
+  children: VNodeNormalizedChildren //规范化后子节点
 ) => {
+
+  //如果组件 是  SLOTS_CHILDREN 类型的
   if (instance.vnode.shapeFlag & ShapeFlags.SLOTS_CHILDREN) {
+    
     const type = (children as RawSlots)._
+
     if (type) {
       // users can get the shallow readonly version of the slots object through `this.$slots`,
       // we should avoid the proxy object polluting the slots of the internal instance

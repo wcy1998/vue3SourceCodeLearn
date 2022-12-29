@@ -1,13 +1,19 @@
-// Core API ------------------------------------------------------------------
 
+
+//核心api
+// Core API ------------------------------------------------------------------
 export const version = __VERSION__
+
+//暴露的响应式api
 export {
-  // core
+            
+  //核心api
   computed,
   reactive,
   ref,
   readonly,
-  // utilities
+
+  // 工具函数
   unref,
   proxyRefs,
   isRef,
@@ -16,7 +22,9 @@ export {
   isProxy,
   isReactive,
   isReadonly,
-  // advanced
+
+
+  // 高级函数
   customRef,
   triggerRef,
   shallowRef,
@@ -24,22 +32,30 @@ export {
   shallowReadonly,
   markRaw,
   toRaw,
-  // effect
+
+  // 副作用函数
   effect,
   stop,
   ReactiveEffect,
-  // effect scope
+
+  //副作用作用域
   effectScope,
   EffectScope,
   getCurrentScope,
   onScopeDispose
 } from '@vue/reactivity'
+
+
+//watch相关的api
 export {
   watch,
   watchEffect,
   watchPostEffect,
   watchSyncEffect
 } from './apiWatch'
+
+
+//生命周期钩子
 export {
   onBeforeMount,
   onMounted,
@@ -54,38 +70,64 @@ export {
   onErrorCaptured,
   onServerPrefetch
 } from './apiLifecycle'
+
+//provide inject
 export { provide, inject } from './apiInject'
+
+//nexttick
 export { nextTick } from './scheduler'
+
+//定义一个组件
 export { defineComponent } from './apiDefineComponent'
+
+//定义一个异步组件
 export { defineAsyncComponent } from './apiAsyncComponent'
+
+//使用插槽 和 穿透属性
 export { useAttrs, useSlots } from './apiSetupHelpers'
+
 
 // <script setup> API ----------------------------------------------------------
 
 export {
+
+  //ts相关api
   // macros runtime, for typing and warnings only
   defineProps,
   defineEmits,
   defineExpose,
   withDefaults,
+
   // internal
   mergeDefaults,
   withAsyncContext
 } from './apiSetupHelpers'
 
+
+
+//进阶api
 // Advanced API ----------------------------------------------------------------
 
 // For getting a hold of the internal instance in setup() - useful for advanced
 // plugins
+//获取当前实例
 export { getCurrentInstance } from './component'
 
 // For raw render function users
+//原生渲染函数
 export { h } from './h'
+
 // Advanced render function utilities
+//渲染函数api
 export { createVNode, cloneVNode, mergeProps, isVNode } from './vnode'
+
+
 // VNode types
+//虚拟节点的类型
 export { Fragment, Text, Comment, Static } from './vnode'
+
 // Built-in components
+//内置组件
 export { Teleport, TeleportProps } from './components/Teleport'
 export { Suspense, SuspenseProps } from './components/Suspense'
 export { KeepAlive, KeepAliveProps } from './components/KeepAlive'
@@ -93,39 +135,55 @@ export {
   BaseTransition,
   BaseTransitionProps
 } from './components/BaseTransition'
+
+
 // For using custom directives
+//自定义指令使用
 export { withDirectives } from './directives'
+
+
 // SSR context
+//服务端渲染上下文
 export { useSSRContext, ssrContextKey } from './helpers/useSsrContext'
 
-// Custom Renderer API ---------------------------------------------------------
 
+// Custom Renderer API ---------------------------------------------------------
+//自定义渲染器相关api
 export { createRenderer, createHydrationRenderer } from './renderer'
+
 export { queuePostFlushCb } from './scheduler'
+
 export { warn } from './warning'
+
 export {
   handleError,
   callWithErrorHandling,
   callWithAsyncErrorHandling,
   ErrorCodes
 } from './errorHandling'
+
 export {
   resolveComponent,
   resolveDirective,
   resolveDynamicComponent
 } from './helpers/resolveAssets'
+
 // For integration with runtime compiler
 export { registerRuntimeCompiler, isRuntimeOnly } from './component'
+
 export {
   useTransitionState,
   resolveTransitionHooks,
   setTransitionHooks,
   getTransitionRawChildren
 } from './components/BaseTransition'
+
 export { initCustomFormatter } from './customFormatter'
 
 // For devtools
 export { devtools, setDevtoolsHook } from './devtools'
+
+
 
 // Types -------------------------------------------------------------------------
 
@@ -160,6 +218,7 @@ export {
   ToRefs,
   DeepReadonly
 } from '@vue/reactivity'
+
 export {
   WatchEffect,
   WatchOptions,
@@ -177,6 +236,7 @@ export {
   CreateAppFunction,
   OptionMergeFunction
 } from './apiCreateApp'
+
 export {
   VNode,
   VNodeChild,
@@ -185,6 +245,7 @@ export {
   VNodeArrayChildren,
   VNodeNormalizedChildren
 } from './vnode'
+
 export {
   Component,
   ConcreteComponent,
@@ -194,6 +255,7 @@ export {
   ComponentCustomProps,
   AllowedComponentProps
 } from './component'
+
 export { DefineComponent } from './apiDefineComponent'
 export {
   ComponentOptions,
@@ -208,12 +270,15 @@ export {
   ComputedOptions,
   RuntimeCompilerOptions
 } from './componentOptions'
+
 export { EmitsOptions, ObjectEmitsOptions } from './componentEmits'
+
 export {
   ComponentPublicInstance,
   ComponentCustomProperties,
   CreateComponentPublicInstance
 } from './componentPublicInstance'
+
 export {
   Renderer,
   RendererNode,
@@ -222,8 +287,11 @@ export {
   RendererOptions,
   RootRenderFunction
 } from './renderer'
+
 export { RootHydrateFunction } from './hydration'
+
 export { Slot, Slots } from './componentSlots'
+
 export {
   Prop,
   PropType,
@@ -232,6 +300,7 @@ export {
   ExtractPropTypes,
   ExtractDefaultPropTypes
 } from './componentProps'
+
 export {
   Directive,
   DirectiveBinding,
@@ -240,16 +309,20 @@ export {
   FunctionDirective,
   DirectiveArguments
 } from './directives'
+
 export { SuspenseBoundary } from './components/Suspense'
+
 export { TransitionState, TransitionHooks } from './components/BaseTransition'
+
 export {
   AsyncComponentOptions,
   AsyncComponentLoader
 } from './apiAsyncComponent'
+
 export { HMRRuntime } from './hmr'
 
 // Internal API ----------------------------------------------------------------
-
+//暴露的一些内部api 可能在版本切换后不进行提示 用户代码要避免依赖他们
 // **IMPORTANT** Internal APIs may change without notice between versions and
 // user code should avoid relying on them.
 
@@ -316,6 +389,9 @@ const _ssrUtils = {
 export const ssrUtils = (
   __NODE_JS__ || __ESM_BUNDLER__ ? _ssrUtils : null
 ) as typeof _ssrUtils
+
+
+
 
 // 2.x COMPAT ------------------------------------------------------------------
 

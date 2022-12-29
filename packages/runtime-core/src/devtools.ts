@@ -28,8 +28,12 @@ interface DevtoolsHook {
   appRecords: AppRecord[]
 }
 
+
+//开发工具钩子
 export let devtools: DevtoolsHook
 
+
+//设置开发工具钩子函数
 export function setDevtoolsHook(hook: DevtoolsHook) {
   devtools = hook
 }

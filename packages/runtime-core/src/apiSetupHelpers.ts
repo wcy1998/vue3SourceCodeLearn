@@ -1,3 +1,5 @@
+//setup 相关的 Api
+
 import { isPromise } from '../../shared/src'
 import {
   getCurrentInstance,

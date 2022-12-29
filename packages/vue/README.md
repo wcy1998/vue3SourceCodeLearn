@@ -1,28 +1,43 @@
 # vue
 
+
+使用哪一个包去使用
 ## Which dist file to use?
 
+//从cdn 或者 不使用打包器
 ### From CDN or without a Bundler
 
+
+//全局暴露vue对象
 - **`vue(.runtime).global(.prod).js`**:
+  
+  //直接通过js脚本引入 全局暴露Vue对象
   - For direct use via `<script src="...">` in the browser. Exposes the `Vue` global.
+
   - Note that global builds are not [UMD](https://github.com/umdjs/umd) builds.  They are built as [IIFEs](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) and is only meant for direct use via `<script src="...">`.
   - In-browser template compilation:
+    //包含编译器的版本
     - **`vue.global.js`** is the "full" build that includes both the compiler and the runtime so it supports compiling templates on the fly.
+    //运行时版本
     - **`vue.runtime.global.js`** contains only the runtime and requires templates to be pre-compiled during a build step.
+
   - Inlines all Vue core internal packages - i.e. it's a single file with no dependencies on other files. This means you **must** import everything from this file and this file only to ensure you are getting the same instance of code.
+
   - Contains hard-coded prod/dev branches, and the prod build is pre-minified. Use the `*.prod.js` files for production.
 
+  //通过原生es引入导出的包
 - **`vue(.runtime).esm-browser(.prod).js`**:
   - For usage via native ES modules imports (in browser via `<script type="module">`.
   - Shares the same runtime compilation, dependency inlining and hard-coded prod/dev behavior with the global build.
 
 ### With a Bundler
 
+  //为了给打包器使用的
 - **`vue(.runtime).esm-bundler.js`**:
 
   - For use with bundlers like `webpack`, `rollup` and `parcel`.
   - Leaves prod/dev branches with `process.env.NODE_ENV` guards (must be replaced by bundler)
+
   - Does not ship minified builds (to be done together with the rest of the code after bundling)
   - Imports dependencies (e.g. `@vue/runtime-core`, `@vue/runtime-compiler`)
     - Imported dependencies are also `esm-bundler` builds and will in turn import their dependencies (e.g. `@vue/runtime-core` imports `@vue/reactivity`)

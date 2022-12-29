@@ -59,11 +59,13 @@ export const ErrorTypeStrings: Record<number | string, string> = {
 
 export type ErrorTypes = LifecycleHooks | ErrorCodes
 
+
+//使用错误处理器 调用方法 
 export function callWithErrorHandling(
-  fn: Function,
-  instance: ComponentInternalInstance | null,
-  type: ErrorTypes,
-  args?: unknown[]
+  fn: Function, //调用的方法
+  instance: ComponentInternalInstance | null, //组件实例
+  type: ErrorTypes, //错误类型
+  args?: unknown[] //参数
 ) {
   let res
   try {

@@ -101,12 +101,20 @@ export interface ParserContext {
   onWarn: NonNullable<ErrorHandlingOptions['onWarn']>
 }
 
+
+//基础的解析template的方法
 export function baseParse(
-  content: string,
-  options: ParserOptions = {}
+  content: string, //template
+  options: ParserOptions = {} //解析配置
 ): RootNode {
+
+  //创建解析上下文
   const context = createParserContext(content, options)
+  
+  //获取游标
   const start = getCursor(context)
+  
+  //创建ast根节点
   return createRoot(
     parseChildren(context, TextModes.DATA, []),
     getSelection(context, start)
@@ -140,13 +148,17 @@ function createParserContext(
   }
 }
 
+//解析子节点信息
 function parseChildren(
-  context: ParserContext,
-  mode: TextModes,
+  context: ParserContext, //template
+  mode: TextModes, //
   ancestors: ElementNode[]
 ): TemplateChildNode[] {
+
   const parent = last(ancestors)
+
   const ns = parent ? parent.ns : Namespaces.HTML
+  
   const nodes: TemplateChildNode[] = []
 
   while (!isEnd(context, mode, ancestors)) {

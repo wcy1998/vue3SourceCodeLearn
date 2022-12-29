@@ -10,6 +10,8 @@ const nativeOnRE = /^on[a-z]/
 
 type DOMRendererOptions = RendererOptions<Node, Element>
 
+
+//patch prop 的方法
 export const patchProp: DOMRendererOptions['patchProp'] = (
   el,
   key,

@@ -1,3 +1,4 @@
+//defineComponents Api
 import {
   ComputedOptions,
   MethodOptions,
@@ -26,10 +27,12 @@ import {
   ComponentPublicInstanceConstructor
 } from './componentPublicInstance'
 
+//公共的props
 export type PublicProps = VNodeProps &
   AllowedComponentProps &
   ComponentCustomProps
 
+//定义一个组件
 export type DefineComponent<
   PropsOrPropOptions = {},
   RawBindings = {},
@@ -72,14 +75,15 @@ export type DefineComponent<
     Defaults
   > &
   PP
+//用于在声明组件时 定义组件类型的工具 ，通过传入的参数进行类型推断 返回值具有人工类型
 
-// defineComponent is a utility that is primarily used for type inference
-// when declaring components. Type inference is provided in the component
-// options (provided as the argument). The returned value has artificial types
 // for TSX / manual render function / IDE support.
+
+
 
 // overload 1: direct setup function
 // (uses user defined props interface)
+
 export function defineComponent<Props, RawBindings = object>(
   setup: (
     props: Readonly<Props>,

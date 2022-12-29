@@ -54,8 +54,9 @@ export const Text = Symbol(__DEV__ ? 'Text' : undefined)
 export const Comment = Symbol(__DEV__ ? 'Comment' : undefined)
 export const Static = Symbol(__DEV__ ? 'Static' : undefined)
 
+//虚拟节点的各种类型
 export type VNodeTypes =
-  | string
+  | string  
   | VNode
   | Component
   | typeof Text
@@ -88,7 +89,9 @@ export type VNodeHook =
   | VNodeMountHook[]
   | VNodeUpdateHook[]
 
+
 // https://github.com/microsoft/TypeScript/issues/33099
+//虚拟节点props
 export type VNodeProps = {
   key?: string | number | symbol
   ref?: VNodeRef
@@ -100,6 +103,7 @@ export type VNodeProps = {
   onVnodeUpdated?: VNodeUpdateHook | VNodeUpdateHook[]
   onVnodeBeforeUnmount?: VNodeMountHook | VNodeMountHook[]
   onVnodeUnmounted?: VNodeMountHook | VNodeMountHook[]
+
 }
 
 type VNodeChildAtom =
@@ -115,36 +119,55 @@ export type VNodeArrayChildren = Array<VNodeArrayChildren | VNodeChildAtom>
 
 export type VNodeChild = VNodeChildAtom | VNodeArrayChildren
 
+
 export type VNodeNormalizedChildren =
   | string
   | VNodeArrayChildren
   | RawSlots
   | null
 
+
+
+//虚拟节点
 export interface VNode<
   HostNode = RendererNode,
   HostElement = RendererElement,
   ExtraProps = { [key: string]: any }
 > {
+
+
+
   /**
    * @internal
    */
+  //是不是一个虚拟节点
   __v_isVNode: true
 
   /**
    * @internal
    */
+  //是否调过响应式
   [ReactiveFlags.SKIP]: true
-
+  
+  //虚拟节点对应的类型 可能是一个组件
   type: VNodeTypes
+  
+  //虚拟节点的props
   props: (VNodeProps & ExtraProps) | null
+
+  //虚拟节点的key值
   key: string | number | symbol | null
+
+  //虚拟节点的ref
   ref: VNodeNormalizedRef | null
+
   /**
    * SFC only. This is assigned on vnode creation using currentScopeId
    * which is set alongside currentRenderingInstance.
    */
+  //仅用于单文件组件，在虚拟节点创建时使用当前的scopeId(和当前渲染中的实例一起设置)
   scopeId: string | null
+
   /**
    * SFC only. This is assigned to:
    * - Slot fragment vnodes with :slotted SFC styles.
@@ -152,105 +175,130 @@ export interface VNode<
    *   inherit the component's slotScopeIds
    * @internal
    */
+  //仅用于单文件组件
   slotScopeIds: string[] | null
+
+  //子虚拟节点 可能是文本 可能是虚拟节点列表
   children: VNodeNormalizedChildren
+  
+  //虚拟节点对应的组件实例
   component: ComponentInternalInstance | null
+  
+  //当前虚拟节点绑定的指令
   dirs: DirectiveBinding[] | null
+
   transition: TransitionHooks<HostElement> | null
 
   // DOM
-  el: HostNode | null
-  anchor: HostNode | null // fragment anchor
-  target: HostElement | null // teleport target
-  targetAnchor: HostNode | null // teleport target anchor
+  el: HostNode | null  //当前虚拟节点对应的真实dom
+  anchor: HostNode | null // fragment anchor   fragment 锚点
+  target: HostElement | null // teleport target  teleport 目标
+  targetAnchor: HostNode | null // teleport target anchor  teleport目标锚点
+
   /**
    * number of elements contained in a static vnode
    * @internal
    */
+  //静态 vnode 中包含的元素数
   staticCount: number
 
   // suspense
+  //suspense的边界
   suspense: SuspenseBoundary | null
+
+
   /**
    * @internal
    */
   ssContent: VNode | null
+
   /**
    * @internal
    */
   ssFallback: VNode | null
 
-  // optimization only
+  //用于优化使用
+
+  //虚拟节点的类型标志
   shapeFlag: number
+
+  //虚拟节点的patch标志
   patchFlag: number
+
+
   /**
    * @internal
    */
+  //动态props
   dynamicProps: string[] | null
+
   /**
    * @internal
    */
+  //动态子节点
   dynamicChildren: VNode[] | null
 
   // application root node only
+  //app上下文
   appContext: AppContext | null
+
 
   /**
    * @internal attached by v-memo
    */
+  //v-memo
   memo?: any[]
+
   /**
    * @internal __COMPAT__ only
    */
   isCompatRoot?: true
+
+
   /**
    * @internal custom element interception hook
    */
+  //自定义元素拦截钩子
   ce?: (instance: ComponentInternalInstance) => void
+
 }
 
-// Since v-if and v-for are the two possible ways node structure can dynamically
-// change, once we consider v-if branches and each v-for fragment a block, we
-// can divide a template into nested blocks, and within each block the node
-// structure would be stable. This allows us to skip most children diffing
-// and only worry about the dynamic nodes (indicated by patch flags).
+
+//因为 v-if  和 v-for是动态会改变节点结构的两种方式，
+//一旦我们把 v-if 分支和每个 v-for fragment当做一个块，
+//我们就可以将模板分成一个个的嵌套块，并在每个块内节点 结构会很稳定。
+//这允许我们跳过大多数孩子节点的diff，只去担心动态节点(动态节点会被patch标志)
 export const blockStack: (VNode[] | null)[] = []
 export let currentBlock: VNode[] | null = null
 
-/**
- * Open a block.
- * This must be called before `createBlock`. It cannot be part of `createBlock`
- * because the children of the block are evaluated before `createBlock` itself
- * is called. The generated code typically looks like this:
- *
- * ```js
- * function render() {
- *   return (openBlock(),createBlock('div', null, [...]))
- * }
- * ```
- * disableTracking is true when creating a v-for fragment block, since a v-for
- * fragment always diffs its children.
- *
- * @private
- */
+
+//打开一个块，这个必须在createBlock之前调用，它不能是createBlock的一部分
+//因为这个块的子节点是在createBlock调用之前被评估的
+//The generated code typically looks like this:
+// ```js
+// function render() {
+//   return (openBlock(),createBlock('div', null, [...]))
+// }
+//创建 v-for fragment块时 disableTracking 为真，因为 v-for fragment块，总是会diff它的子节点
 export function openBlock(disableTracking = false) {
   blockStack.push((currentBlock = disableTracking ? null : []))
 }
+
 
 export function closeBlock() {
   blockStack.pop()
   currentBlock = blockStack[blockStack.length - 1] || null
 }
 
-// Whether we should be tracking dynamic child nodes inside a block.
-// Only tracks when this value is > 0
-// We are not using a simple boolean because this value may need to be
-// incremented/decremented by nested usage of v-once (see below)
+
+//我们是否应该追踪块内的动态子节点
+//只有当isBlockTreeEnabled的值大于0时 我们才会追踪
+//我们没有使用简单的布尔值，因为该值可能需要通过 v-once 的嵌套使用来递增/递减
 export let isBlockTreeEnabled = 1
 
 /**
- * Block tracking sometimes needs to be disabled, for example during the
- * creation of a tree that needs to be cached by v-once. The compiler generates
+ * 有时需要禁用块跟踪，例如在创建需要由 v-once 缓存的树期间
+   The compiler generates
  * code like this:
  *
  * ``` js
@@ -332,11 +380,17 @@ export function createBlock(
   )
 }
 
+//如果是一个虚拟节点
 export function isVNode(value: any): value is VNode {
   return value ? value.__v_isVNode === true : false
 }
 
-export function isSameVNodeType(n1: VNode, n2: VNode): boolean {
+//是不是相同类型的虚拟节点
+export function isSameVNodeType(
+  n1: VNode,  //旧节点
+  n2: VNode   //新节点
+  ): boolean {
+
   if (
     __DEV__ &&
     n2.shapeFlag & ShapeFlags.COMPONENT &&
@@ -345,7 +399,10 @@ export function isSameVNodeType(n1: VNode, n2: VNode): boolean {
     // HMR only: if the component has been hot-updated, force a reload.
     return false
   }
+
+  //查看两者的key 和 组件类型是否一致
   return n1.type === n2.type && n1.key === n2.key
+
 }
 
 let vnodeArgsTransformer:
@@ -375,6 +432,8 @@ const createVNodeWithArgsTransform = (
   )
 }
 
+
+//内部对象的唯一key
 export const InternalObjectKey = `__vInternal`
 
 const normalizeKey = ({ key }: VNodeProps): VNode['key'] =>
@@ -390,50 +449,83 @@ const normalizeRef = ({ ref }: VNodeProps): VNodeNormalizedRefAtom | null => {
   ) as any
 }
 
+
+//创建虚拟节点
 function createBaseVNode(
-  type: VNodeTypes | ClassComponent | typeof NULL_DYNAMIC_COMPONENT,
+  //组件的描述
+  type: VNodeTypes | ClassComponent | typeof NULL_DYNAMIC_COMPONENT, 
+  //组件的props
   props: (Data & VNodeProps) | null = null,
-  children: unknown = null,
-  patchFlag = 0,
+  //子节点
+  children: unknown = null, 
+  //patch标志
+  patchFlag = 0, 
+  //动态props
   dynamicProps: string[] | null = null,
+  //组件类型
   shapeFlag = type === Fragment ? 0 : ShapeFlags.ELEMENT,
+  //是不是块节点
   isBlockNode = false,
-  needFullChildrenNormalization = false
+  //是不是需要规范化所有的子节点
+  needFullChildrenNormalization = false 
 ) {
+
+  //创建一个虚拟节点
   const vnode = {
-    __v_isVNode: true,
+    //标记是一个虚拟节点
+    __v_isVNode: true, 
+    //标记跳过
     __v_skip: true,
-    type,
+    //虚拟节点的组件描述
+    type, 
+    //虚拟节点的props
     props,
-    key: props && normalizeKey(props),
+    //虚拟节点的key 
+    key: props && normalizeKey(props), 
+    //虚拟节点的ref
     ref: props && normalizeRef(props),
+    //节点的scopeId
     scopeId: currentScopeId,
-    slotScopeIds: null,
+    //节点的插槽scopeId
+    slotScopeIds: null, 
+    //节点的子虚拟节点
     children,
-    component: null,
-    suspense: null,
-    ssContent: null,
+    //虚拟节点的组件实例
+    component: null, 
+    suspense: null, 
+    ssContent: null, 
     ssFallback: null,
     dirs: null,
     transition: null,
-    el: null,
+    el: null, 
     anchor: null,
     target: null,
     targetAnchor: null,
     staticCount: 0,
+    //虚拟节点的类型
     shapeFlag,
-    patchFlag,
-    dynamicProps,
+    //虚拟节点的patch标志
+    patchFlag, 
+    //虚拟节点的动态props
+    dynamicProps, 
+    //虚拟节点的动态子节点
     dynamicChildren: null,
+    //虚拟节点的app上下文
     appContext: null
   } as VNode
 
+  //如果需要规范化所有的子节点
   if (needFullChildrenNormalization) {
+
+    //规范化子节点
     normalizeChildren(vnode, children)
+
     // normalize suspense children
+    //在对suspense子节点进行规范化
     if (__FEATURE_SUSPENSE__ && shapeFlag & ShapeFlags.SUSPENSE) {
       ;(type as typeof SuspenseImpl).normalize(vnode)
     }
+
   } else if (children) {
     // compiled element vnode - if children is passed, only possible types are
     // string or Array.
@@ -442,29 +534,32 @@ function createBaseVNode(
       : ShapeFlags.ARRAY_CHILDREN
   }
 
-  // validate key
+  //验证key值
   if (__DEV__ && vnode.key !== vnode.key) {
     warn(`VNode created with invalid key (NaN). VNode type:`, vnode.type)
   }
 
-  // track vnode for block tree
+
+  //追踪  块级树的 虚拟节点
   if (
+    //如果允许追踪虚拟节点
     isBlockTreeEnabled > 0 &&
-    // avoid a block node from tracking itself
+    // 避免块节点跟踪自身
     !isBlockNode &&
-    // has current parent block
+    // 存在当前父块
     currentBlock &&
-    // presence of a patch flag indicates this node needs patching on updates.
-    // component nodes also should always be patched, because even if the
-    // component doesn't need to update, it needs to persist the instance on to
-    // the next vnode so that it can be properly unmounted later.
+    //patch标志的存在表示该节点需要在更新时需要进行patch
+    //组件节点也应该始终被patch，因为即使组件不需要更新，
+    //它也需要将实例持久化到下一个 vnode，以便稍后可以正确卸载它
     (vnode.patchFlag > 0 || shapeFlag & ShapeFlags.COMPONENT) &&
-    // the EVENTS flag is only for hydration and if it is the only flag, the
-    // vnode should not be considered dynamic due to handler caching.
+    //EVENTS 标志仅用于活水阶段，而且如果它是唯一的标志，
+    // 则由于处理程序缓存，vnode 不应被视为动态
     vnode.patchFlag !== PatchFlags.HYDRATE_EVENTS
+
   ) {
     currentBlock.push(vnode)
   }
+
 
   if (__COMPAT__) {
     convertLegacyVModelProps(vnode)
@@ -477,18 +572,25 @@ function createBaseVNode(
 
 export { createBaseVNode as createElementVNode }
 
+
+//创建虚拟节点
 export const createVNode = (
   __DEV__ ? createVNodeWithArgsTransform : _createVNode
 ) as typeof _createVNode
 
+
+
+//创建虚拟节点
 function _createVNode(
-  type: VNodeTypes | ClassComponent | typeof NULL_DYNAMIC_COMPONENT,
-  props: (Data & VNodeProps) | null = null,
-  children: unknown = null,
-  patchFlag: number = 0,
-  dynamicProps: string[] | null = null,
-  isBlockNode = false
+  type: VNodeTypes | ClassComponent | typeof NULL_DYNAMIC_COMPONENT, //组件
+  props: (Data & VNodeProps) | null = null, //组件props
+  children: unknown = null, //子节点
+  patchFlag: number = 0, //对比标志
+  dynamicProps: string[] | null = null, //动态props
+  isBlockNode = false //是不是块节点
 ): VNode {
+
+  //没有组件就创建一个注释
   if (!type || type === NULL_DYNAMIC_COMPONENT) {
     if (__DEV__ && !type) {
       warn(`Invalid vnode type when creating vnode: ${type}.`)
@@ -496,28 +598,36 @@ function _createVNode(
     type = Comment
   }
 
+  //如果是一个虚拟节点 这个发生在动态组件的情形下 确保在克隆节点期间进行refs的合并 而不是 覆盖
   if (isVNode(type)) {
     // createVNode receiving an existing vnode. This happens in cases like
     // <component :is="vnode"/>
     // #2078 make sure to merge refs during the clone instead of overwriting it
     const cloned = cloneVNode(type, props, true /* mergeRef: true */)
+    //规范化子节点
     if (children) {
       normalizeChildren(cloned, children)
     }
+    //返回克隆后的节点
     return cloned
   }
 
   // class component normalization.
+  //如果是一个类组件
   if (isClassComponent(type)) {
     type = type.__vccOpts
   }
 
   // 2.x async/functional component compat
+  //兼容 vue2的异步 和 函数式组件
   if (__COMPAT__) {
     type = convertLegacyComponent(type, currentRenderingInstance)
   }
 
   // class & style normalization.
+  //如果传递了props
+
+  //规范化props中的css 和 style相关属性
   if (props) {
     // for reactive or proxy objects, we need to clone it to enable mutation.
     props = guardReactiveProps(props)!
@@ -536,6 +646,14 @@ function _createVNode(
   }
 
   // encode the vnode type information into a bitmap
+
+  //判断当前组件的类型
+
+  //如果组件是一个方法 说明是一个函数式组件
+  //如果组件是一个对象 说明是一个有状态的组件
+  //如果组件是一个teleport 说明是一个teleport组件
+  //如果组件是一个suspense 说明是一个suspense组件
+  //如果组件是一个string类型 说明是一个元素 
   const shapeFlag = isString(type)
     ? ShapeFlags.ELEMENT
     : __FEATURE_SUSPENSE__ && isSuspense(type)
@@ -548,6 +666,7 @@ function _createVNode(
     ? ShapeFlags.FUNCTIONAL_COMPONENT
     : 0
 
+  //提示接受到的组件是一个响应式对象 将其转换为普通对象
   if (__DEV__ && shapeFlag & ShapeFlags.STATEFUL_COMPONENT && isProxy(type)) {
     type = toRaw(type)
     warn(
@@ -559,16 +678,17 @@ function _createVNode(
       type
     )
   }
-
+  
+  //创建虚拟节点
   return createBaseVNode(
     type,
     props,
     children,
     patchFlag,
-    dynamicProps,
-    shapeFlag,
-    isBlockNode,
-    true
+    dynamicProps, //动态props
+    shapeFlag, //组件类型
+    isBlockNode, //是不是块节点
+    true 
   )
 }
 
@@ -722,9 +842,18 @@ export function cloneIfMounted(child: VNode): VNode {
   return child.el === null || child.memo ? child : cloneVNode(child)
 }
 
-export function normalizeChildren(vnode: VNode, children: unknown) {
+
+//规范化子节点
+export function normalizeChildren(
+  vnode: VNode,  //虚拟节点
+  children: unknown //子节点
+  ) {
+
   let type = 0
+  
+  //当前节点的类型
   const { shapeFlag } = vnode
+
   if (children == null) {
     children = null
   } else if (isArray(children)) {

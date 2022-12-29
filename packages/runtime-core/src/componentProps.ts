@@ -141,18 +141,26 @@ type NormalizedProp =
 export type NormalizedProps = Record<string, NormalizedProp>
 export type NormalizedPropsOptions = [NormalizedProps, string[]] | []
 
+
+//初始化组件的props
 export function initProps(
-  instance: ComponentInternalInstance,
-  rawProps: Data | null,
-  isStateful: number, // result of bitwise flag comparison
-  isSSR = false
+  instance: ComponentInternalInstance,//组件实例
+  rawProps: Data | null, //原始的props
+  isStateful: number, // 是不是状态华组件
+  isSSR = false //是不是服务端渲染
 ) {
+
+
   const props: Data = {}
   const attrs: Data = {}
-  def(attrs, InternalObjectKey, 1)
 
+  //标记一个内部key
+  def(attrs, InternalObjectKey, 1)
+  
+  //组件实例的默认props
   instance.propsDefaults = Object.create(null)
 
+  //设置所有的props
   setFullProps(instance, rawProps, props, attrs)
 
   // ensure all declared prop keys are present
@@ -181,6 +189,8 @@ export function initProps(
   }
   instance.attrs = attrs
 }
+
+
 
 export function updateProps(
   instance: ComponentInternalInstance,
@@ -312,22 +322,33 @@ export function updateProps(
   }
 }
 
+
+//设置所有的props
 function setFullProps(
-  instance: ComponentInternalInstance,
-  rawProps: Data | null,
-  props: Data,
-  attrs: Data
+  instance: ComponentInternalInstance, //组件实例
+  rawProps: Data | null, //所有原生的props
+  props: Data, //解析后的props
+  attrs: Data //解析后的attrs
 ) {
-  const [options, needCastKeys] = instance.propsOptions
-  let hasAttrsChanged = false
+
+
+  const [
+    options, 
+    needCastKeys //需要进行驼峰转换的键值
+  ] = instance.propsOptions
+
+  let hasAttrsChanged = false  //是不是存在attrs
   let rawCastValues: Data | undefined
+
+  //如果存在传入的props
   if (rawProps) {
     for (let key in rawProps) {
-      // key, ref are reserved and never passed down
+
+      //像是key ref这样的内置的prop 不会进行传递
       if (isReservedProp(key)) {
         continue
       }
-
+     
       if (__COMPAT__) {
         if (key.startsWith('onHook:')) {
           softAssertCompatEnabled(
@@ -340,10 +361,11 @@ function setFullProps(
           continue
         }
       }
-
+      
+      //属性值
       const value = rawProps[key]
-      // prop option names are camelized during normalization, so to support
-      // kebab -> camel conversion here we need to camelize the key.
+
+      // prop 选项名称在规范化过程中被驼峰化，这里我们需要对key进行camelize
       let camelKey
       if (options && hasOwn(options, (camelKey = camelize(key)))) {
         if (!needCastKeys || !needCastKeys.includes(camelKey)) {
@@ -351,10 +373,13 @@ function setFullProps(
         } else {
           ;(rawCastValues || (rawCastValues = {}))[camelKey] = value
         }
-      } else if (!isEmitListener(instance.emitsOptions, key)) {
-        // Any non-declared (either as a prop or an emitted event) props are put
-        // into a separate `attrs` object for spreading. Make sure to preserve
-        // original key casing
+      } 
+       //如果也没有声明在emits事件中
+      else if (!isEmitListener(instance.emitsOptions, key)) {
+        
+         //任何没有声明的 props 和 emit事件 都会被放入 attrs对象中进行传播
+         //请确认这些键的格式
+
         if (__COMPAT__) {
           if (isOn(key) && key.endsWith('Native')) {
             key = key.slice(0, -6) // remove Native postfix
@@ -369,7 +394,8 @@ function setFullProps(
       }
     }
   }
-
+   
+  //如果有需要转换的键名
   if (needCastKeys) {
     const rawCurrentProps = toRaw(props)
     const castValues = rawCastValues || EMPTY_OBJ

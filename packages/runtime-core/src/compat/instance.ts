@@ -55,6 +55,8 @@ export interface LegacyPublicProperties {
   $listeners: Record<string, Function | Function[]>
 }
 
+
+//安装一些兼容vue2的公开属性
 export function installCompatInstanceProperties(map: PublicPropertiesMap) {
   const set = (target: any, key: any, val: any) => {
     target[key] = val
@@ -65,17 +67,17 @@ export function installCompatInstanceProperties(map: PublicPropertiesMap) {
   }
 
   extend(map, {
-    $set: i => {
+    $set: i => {  //$set
       assertCompatEnabled(DeprecationTypes.INSTANCE_SET, i)
       return set
     },
 
-    $delete: i => {
+    $delete: i => {   //$delete
       assertCompatEnabled(DeprecationTypes.INSTANCE_DELETE, i)
       return del
     },
 
-    $mount: i => {
+    $mount: i => {  //$mount
       assertCompatEnabled(
         DeprecationTypes.GLOBAL_MOUNT,
         null /* this warning is global */
@@ -84,14 +86,14 @@ export function installCompatInstanceProperties(map: PublicPropertiesMap) {
       return i.ctx._compat_mount || NOOP
     },
 
-    $destroy: i => {
+    $destroy: i => { //$destroy
       assertCompatEnabled(DeprecationTypes.INSTANCE_DESTROY, i)
       // root destroy override from ./global.ts in installCompatMount
       return i.ctx._compat_destroy || NOOP
     },
 
     // overrides existing accessor
-    $slots: i => {
+    $slots: i => {  //$slots
       if (
         isCompatEnabled(DeprecationTypes.RENDER_FUNCTION, i) &&
         i.render &&
@@ -102,7 +104,7 @@ export function installCompatInstanceProperties(map: PublicPropertiesMap) {
       return __DEV__ ? shallowReadonly(i.slots) : i.slots
     },
 
-    $scopedSlots: i => {
+    $scopedSlots: i => {  //$scopedSlots
       assertCompatEnabled(DeprecationTypes.INSTANCE_SCOPED_SLOTS, i)
       const res: InternalSlots = {}
       for (const key in i.slots) {
@@ -114,23 +116,23 @@ export function installCompatInstanceProperties(map: PublicPropertiesMap) {
       return res
     },
 
-    $on: i => on.bind(null, i),
-    $once: i => once.bind(null, i),
-    $off: i => off.bind(null, i),
+    $on: i => on.bind(null, i), //$on
+    $once: i => once.bind(null, i), //$once
+    $off: i => off.bind(null, i),//$off
 
-    $children: getCompatChildren,
-    $listeners: getCompatListeners
+    $children: getCompatChildren, //$children
+    $listeners: getCompatListeners //$listeners
   } as PublicPropertiesMap)
 
   /* istanbul ignore if */
   if (isCompatEnabled(DeprecationTypes.PRIVATE_APIS, null)) {
     extend(map, {
       // needed by many libs / render fns
-      $vnode: i => i.vnode,
+      $vnode: i => i.vnode,  //$vnode
 
       // inject addtional properties into $options for compat
       // e.g. vuex needs this.$options.parent
-      $options: i => {
+      $options: i => {  //$options
         const res = extend({}, resolveMergedOptions(i))
         res.parent = i.proxy!.$parent
         res.propsData = i.vnode.props
@@ -138,32 +140,32 @@ export function installCompatInstanceProperties(map: PublicPropertiesMap) {
       },
 
       // some private properties that are likely accessed...
-      _self: i => i.proxy,
-      _uid: i => i.uid,
-      _data: i => i.data,
-      _isMounted: i => i.isMounted,
-      _isDestroyed: i => i.isUnmounted,
+      _self: i => i.proxy,    //_self
+      _uid: i => i.uid,     //_uid
+      _data: i => i.data,   //_data
+      _isMounted: i => i.isMounted,  //_isMounted
+      _isDestroyed: i => i.isUnmounted, //_isDestroyed
 
       // v2 render helpers
-      $createElement: () => compatH,
-      _c: () => compatH,
-      _o: () => legacyMarkOnce,
-      _n: () => toNumber,
-      _s: () => toDisplayString,
-      _l: () => renderList,
-      _t: i => legacyRenderSlot.bind(null, i),
-      _q: () => looseEqual,
-      _i: () => looseIndexOf,
-      _m: i => legacyRenderStatic.bind(null, i),
-      _f: () => resolveFilter,
-      _k: i => legacyCheckKeyCodes.bind(null, i),
-      _b: () => legacyBindObjectProps,
-      _v: () => createTextVNode,
-      _e: () => createCommentVNode,
-      _u: () => legacyresolveScopedSlots,
-      _g: () => legacyBindObjectListeners,
-      _d: () => legacyBindDynamicKeys,
-      _p: () => legacyPrependModifier
+      $createElement: () => compatH,  //$createElement
+      _c: () => compatH,  //_c
+      _o: () => legacyMarkOnce, //_o
+      _n: () => toNumber, //_n
+      _s: () => toDisplayString,  //_s
+      _l: () => renderList,  //_l
+      _t: i => legacyRenderSlot.bind(null, i), //_t
+      _q: () => looseEqual,  //_q
+      _i: () => looseIndexOf,  //_i
+      _m: i => legacyRenderStatic.bind(null, i), //_m
+      _f: () => resolveFilter, //_f
+      _k: i => legacyCheckKeyCodes.bind(null, i), //_k
+      _b: () => legacyBindObjectProps,//_b
+      _v: () => createTextVNode, //_v
+      _e: () => createCommentVNode, //_e
+      _u: () => legacyresolveScopedSlots, //_u
+      _g: () => legacyBindObjectListeners, //_g
+      _d: () => legacyBindDynamicKeys, //_d
+      _p: () => legacyPrependModifier //_p
     } as PublicPropertiesMap)
   }
 }

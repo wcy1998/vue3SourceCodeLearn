@@ -86,6 +86,8 @@ import { OptionMergeFunction } from './apiCreateApp'
  * }
  * ```
  */
+
+//组件自定义配置
 export interface ComponentCustomOptions {}
 
 export type RenderFunction = () => VNodeChild
@@ -105,47 +107,69 @@ type ExtractOptionProp<T> = T extends ComponentOptionsBase<
     : P
   : {}
 
+
+  //组件的基本配置  继承至遗留配置  组件 内部配置  组件自定义配置
 export interface ComponentOptionsBase<
-  Props,
-  RawBindings,
+  Props, //props泛型
+  RawBindings, //原生绑定泛型
   D,
-  C extends ComputedOptions,
-  M extends MethodOptions,
-  Mixin extends ComponentOptionsMixin,
-  Extends extends ComponentOptionsMixin,
-  E extends EmitsOptions,
+  C extends ComputedOptions, //计算属性泛型
+  M extends MethodOptions, //方法泛型
+  Mixin extends ComponentOptionsMixin, //mixin泛型
+  Extends extends ComponentOptionsMixin, //extends泛型
+  E extends EmitsOptions, //emit泛型
   EE extends string = string,
   Defaults = {}
-> extends LegacyOptions<Props, D, C, M, Mixin, Extends>,
+> extends
+   LegacyOptions<Props, D, C, M, Mixin, Extends>,
     ComponentInternalOptions,
-    ComponentCustomOptions {
+    ComponentCustomOptions 
+    {
+  //setup 配置
   setup?: (
-    this: void,
-    props: Readonly<
+    this: void, //setup 使用this
+    props: Readonly<  //可读的要求被赋值的Props 和 从mixin中抽取出来的一些属性
       LooseRequired<
         Props &
           UnionToIntersection<ExtractOptionProp<Mixin>> &
           UnionToIntersection<ExtractOptionProp<Extends>>
       >
     >,
-    ctx: SetupContext<E>
-  ) => Promise<RawBindings> | RawBindings | RenderFunction | void
+    ctx: SetupContext<E> //setup 上下文
+  ) => //返回一个 promise 或者 不返回 或者 渲染函数 或者 对象
+   Promise<RawBindings> | RawBindings | RenderFunction | void
+
+  //组件名
   name?: string
+
+  //组件模板
   template?: string | object // can be a direct DOM node
   // Note: we are intentionally using the signature-less `Function` type here
   // since any type with signature will cause the whole inference to fail when
   // the return expression contains reference to `this`.
   // Luckily `render()` doesn't need any arguments nor does it care about return
   // type.
+
+  //组件渲染方法
   render?: Function
+
+  //组件注册组件
   components?: Record<string, Component>
+  //组件指令
   directives?: Record<string, Directive>
+  //是不是穿透属性
   inheritAttrs?: boolean
+  //组件的emits
   emits?: (E | EE[]) & ThisType<void>
+
+  //组件的暴露配置
   // TODO infer public instance type based on exposed keys
   expose?: string[]
-  serverPrefetch?(): Promise<any>
 
+  //组件的服务预获取
+  serverPrefetch?(): Promise<any>
+ 
+  //组件的编译配置
   // Runtime compiler only -----------------------------------------------------
   compilerOptions?: RuntimeCompilerOptions
 
@@ -156,6 +180,7 @@ export interface ComponentOptionsBase<
    * not user facing, so the typing is lax and for test only.
    * @internal
    */
+  //组件的服务端渲染方法
   ssrRender?: (
     ctx: any,
     push: (item: any) => void,
@@ -179,11 +204,13 @@ export interface ComponentOptionsBase<
    * marker for AsyncComponentWrapper
    * @internal
    */
+  //异步加载方法
   __asyncLoader?: () => Promise<ConcreteComponent>
   /**
    * the inner component resolved by the AsyncComponentWrapper
    * @internal
    */
+  //异步组件
   __asyncResolved?: ConcreteComponent
 
   // Type differentiators ------------------------------------------------------
@@ -194,12 +221,14 @@ export interface ComponentOptionsBase<
   // type-only differentiator to separate OptionWithoutProps from a constructor
   // type returned by defineComponent() or FunctionalComponent
   call?: (this: unknown, ...args: unknown[]) => never
-  // type-only differentiators for built-in Vnode types
-  __isFragment?: never
-  __isTeleport?: never
-  __isSuspense?: never
 
-  __defaults?: Defaults
+
+  // type-only differentiators for built-in Vnode types
+  __isFragment?: never //是不是fragment 内置组件
+  __isTeleport?: never //是不是teleport内置组件
+  __isSuspense?: never //是不是suspense内置组件
+
+  __defaults?: Defaults  //默认项
 }
 
 /**
@@ -318,17 +347,21 @@ export type ComponentOptionsWithObjectProps<
     >
   >
 
+
+//一个组件配置 是一个交叉类型
 export type ComponentOptions<
-  Props = {},
-  RawBindings = any,
+  Props = {}, //props泛型
+  RawBindings = any, //原生绑定值泛型
   D = any,
-  C extends ComputedOptions = any,
-  M extends MethodOptions = any,
-  Mixin extends ComponentOptionsMixin = any,
-  Extends extends ComponentOptionsMixin = any,
-  E extends EmitsOptions = any
-> = ComponentOptionsBase<Props, RawBindings, D, C, M, Mixin, Extends, E> &
-  ThisType<
+  C extends ComputedOptions = any, //计算属性泛型
+  M extends MethodOptions = any, //方法属性泛型
+  Mixin extends ComponentOptionsMixin = any, //mixin配置泛型
+  Extends extends ComponentOptionsMixin = any, //extends配置泛型
+  E extends EmitsOptions = any //emit配置泛型
+> = 
+ComponentOptionsBase<Props, RawBindings, D, C, M, Mixin, Extends, E> //基础的组件配置
+ &
+  ThisType<                //this类型
     CreateComponentPublicInstance<
       {},
       RawBindings,
@@ -389,6 +422,8 @@ type ObjectInjectOptions = Record<
   string | symbol | { from?: string | symbol; default?: unknown }
 >
 
+
+//遗留的配置 兼容vue2
 interface LegacyOptions<
   Props,
   D,
@@ -397,8 +432,11 @@ interface LegacyOptions<
   Mixin extends ComponentOptionsMixin,
   Extends extends ComponentOptionsMixin
 > {
+
+  //兼容配置
   compatConfig?: CompatConfig
 
+  //所有的自定义属性
   // allow any custom options
   [key: string]: any
 
@@ -406,6 +444,8 @@ interface LegacyOptions<
   // Limitation: we cannot expose RawBindings on the `this` context for data
   // since that leads to some sort of circular inference and breaks ThisType
   // for the entire component.
+
+  //data属性
   data?: (
     this: CreateComponentPublicInstance<
       Props,
@@ -426,20 +466,29 @@ interface LegacyOptions<
       Extends
     >
   ) => D
+
+  //computed属性
   computed?: C
+  //方法属性
   methods?: M
+  //watch 配置
   watch?: ComponentWatchOptions
+  //provide配置
   provide?: Data | Function
+  //inject配置
   inject?: ComponentInjectOptions
 
   // assets
+  //filters 配置
   filters?: Record<string, Function>
 
   // composition
+  //mixin  extends配置
   mixins?: Mixin[]
   extends?: Extends
 
   // lifecycle
+  //生命周期钩子
   beforeCreate?(): void
   created?(): void
   beforeMount?(): void
@@ -462,6 +511,7 @@ interface LegacyOptions<
    * runtime compile only
    * @deprecated use `compilerOptions.delimiters` instead.
    */
+  //分割符
   delimiters?: [string, string]
 
   /**

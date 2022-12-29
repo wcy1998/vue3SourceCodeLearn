@@ -110,6 +110,9 @@ type UnwrapMixinsType<
 
 type EnsureNonVoid<T> = T extends void ? {} : T
 
+
+
+//一个公共的组件实例
 export type ComponentPublicInstanceConstructor<
   T extends ComponentPublicInstance<
     Props,
@@ -124,10 +127,12 @@ export type ComponentPublicInstanceConstructor<
   C extends ComputedOptions = ComputedOptions,
   M extends MethodOptions = MethodOptions
 > = {
-  __isFragment?: never
-  __isTeleport?: never
-  __isSuspense?: never
-  new (...args: any[]): T
+  __isFragment?: never //是不是fragment组件
+  __isTeleport?: never //是不是teleport组件
+  __isSuspense?: never //是不是suspense组件
+
+  new (...args: any[]): T //构造函数
+
 }
 
 export type CreateComponentPublicInstance<
@@ -224,23 +229,25 @@ const getPublicInstance = (
   return getPublicInstance(i.parent)
 }
 
+
+//公开属性map
 export const publicPropertiesMap: PublicPropertiesMap = /*#__PURE__*/ extend(
   Object.create(null),
   {
-    $: i => i,
-    $el: i => i.vnode.el,
-    $data: i => i.data,
-    $props: i => (__DEV__ ? shallowReadonly(i.props) : i.props),
-    $attrs: i => (__DEV__ ? shallowReadonly(i.attrs) : i.attrs),
-    $slots: i => (__DEV__ ? shallowReadonly(i.slots) : i.slots),
-    $refs: i => (__DEV__ ? shallowReadonly(i.refs) : i.refs),
-    $parent: i => getPublicInstance(i.parent),
-    $root: i => getPublicInstance(i.root),
-    $emit: i => i.emit,
-    $options: i => (__FEATURE_OPTIONS_API__ ? resolveMergedOptions(i) : i.type),
-    $forceUpdate: i => () => queueJob(i.update),
-    $nextTick: i => nextTick.bind(i.proxy!),
-    $watch: i => (__FEATURE_OPTIONS_API__ ? instanceWatch.bind(i) : NOOP)
+    $: i => i,  //组件实例自身
+    $el: i => i.vnode.el, //组件的真实dom
+    $data: i => i.data, //组件的data
+    $props: i => (__DEV__ ? shallowReadonly(i.props) : i.props), //组件的props
+    $attrs: i => (__DEV__ ? shallowReadonly(i.attrs) : i.attrs), //组件的attrs
+    $slots: i => (__DEV__ ? shallowReadonly(i.slots) : i.slots), //组件的slots
+    $refs: i => (__DEV__ ? shallowReadonly(i.refs) : i.refs), //组件的refs
+    $parent: i => getPublicInstance(i.parent), //组件的父实例
+    $root: i => getPublicInstance(i.root), //组件的根实例
+    $emit: i => i.emit, //组件的emit
+    $options: i => (__FEATURE_OPTIONS_API__ ? resolveMergedOptions(i) : i.type), //组件的options
+    $forceUpdate: i => () => queueJob(i.update), //组件强制更新方法
+    $nextTick: i => nextTick.bind(i.proxy!), //组件的nextTick方法
+    $watch: i => (__FEATURE_OPTIONS_API__ ? instanceWatch.bind(i) : NOOP) //组件的watch方法
   } as PublicPropertiesMap
 )
 
@@ -261,20 +268,31 @@ export interface ComponentRenderContext {
   _: ComponentInternalInstance
 }
 
-export const PublicInstanceProxyHandlers: ProxyHandler<any> = {
-  get({ _: instance }: ComponentRenderContext, key: string) {
-    const { ctx, setupState, data, props, accessCache, type, appContext } =
-      instance
 
-    // for internal formatters to know that this is a Vue instance
+//公开实例代理的处理
+export const PublicInstanceProxyHandlers: ProxyHandler<any> = {
+
+  get({ _: instance }: ComponentRenderContext, key: string) {
+
+    const { 
+      ctx, 
+      setupState, 
+      data, 
+      props, 
+      accessCache, 
+      type, 
+      appContext 
+    } = instance
+
+    //让内部格式化程序知道这是一个 Vue 实例
     if (__DEV__ && key === '__isVue') {
       return true
     }
 
-    // prioritize <script setup> bindings during dev.
-    // this allows even properties that start with _ or $ to be used - so that
-    // it aligns with the production behavior where the render fn is inlined and
-    // indeed has access to all declared variables.
+
+    //在开发期间优先考虑 <script setup> 绑定。 
+    //这甚至允许使用以 _ 或 $ 开头的属性 这样以便它与渲染函数 内联的生产行为保持一致，
+    //并且确实可以访问所有声明的变量
     if (
       __DEV__ &&
       setupState !== EMPTY_OBJ &&
@@ -284,31 +302,43 @@ export const PublicInstanceProxyHandlers: ProxyHandler<any> = {
       return setupState[key]
     }
 
-    // data / props / ctx
-    // This getter gets called for every property access on the render context
-    // during render and is a major hotspot. The most expensive part of this
-    // is the multiple hasOwn() calls. It's much faster to do a simple property
-    // access on a plain object, so we use an accessCache object (with null
-    // prototype) to memoize what access type a key corresponds to.
+    //渲染上下文中的每个属性访问都会调用此 getter，在渲染期间是一个主要的热点，
+    //这里最大的开销是多次 hasOwn() 调用，做简单的属性访问要快多了，
+    //所以我们可以使用一个访问缓存对象来记住一个键对应的访问类型
     let normalizedProps
+
+    //如果访问的不是以$开头的属性
     if (key[0] !== '$') {
+      
+      //获取缓存内信息
       const n = accessCache![key]
+     
+      //如果存在缓存信息
       if (n !== undefined) {
         switch (n) {
+           //如果是setup的属性
           case AccessTypes.SETUP:
             return setupState[key]
+          //如果是data属性
           case AccessTypes.DATA:
             return data[key]
+          //如果是上下文属性
           case AccessTypes.CONTEXT:
             return ctx[key]
+          //如果是props属性
           case AccessTypes.PROPS:
             return props![key]
-          // default: just fallthrough
         }
-      } else if (setupState !== EMPTY_OBJ && hasOwn(setupState, key)) {
+      } 
+      //不存在缓存结果 且 setupState存在这个属性
+      else if (setupState !== EMPTY_OBJ && hasOwn(setupState, key)) {
+        //缓存结果
         accessCache![key] = AccessTypes.SETUP
         return setupState[key]
-      } else if (data !== EMPTY_OBJ && hasOwn(data, key)) {
+      } 
+       //不存在缓存结果 且 data存在这个属性
+      else if (data !== EMPTY_OBJ && hasOwn(data, key)) {
+        //缓存结果
         accessCache![key] = AccessTypes.DATA
         return data[key]
       } else if (
@@ -327,7 +357,10 @@ export const PublicInstanceProxyHandlers: ProxyHandler<any> = {
       }
     }
 
+    //公开的get
     const publicGetter = publicPropertiesMap[key]
+
+
     let cssModule, globalProperties
     // public $xxx properties
     if (publicGetter) {
@@ -484,11 +517,13 @@ export const RuntimeCompiledPublicInstanceProxyHandlers = /*#__PURE__*/ extend(
   }
 )
 
-// dev only
-// In dev mode, the proxy target exposes the same properties as seen on `this`
-// for easier console inspection. In prod mode it will be an empty object so
-// these properties definitions can be skipped.
+
+//开发环境使用
+//在开发环境中，代理对象暴露相同的属性在this上，这样能更方便的打印检查
+//在生成环境这将会是一个空对象所以这些的定义都会被跳过
+//创建dev环境下的组件上下文
 export function createDevRenderContext(instance: ComponentInternalInstance) {
+
   const target: Record<string, any> = {}
 
   // expose internal instance for proxy handlers
@@ -498,14 +533,13 @@ export function createDevRenderContext(instance: ComponentInternalInstance) {
     get: () => instance
   })
 
-  // expose public properties
+  //暴露一些公开的属性
   Object.keys(publicPropertiesMap).forEach(key => {
     Object.defineProperty(target, key, {
       configurable: true,
       enumerable: false,
       get: () => publicPropertiesMap[key](instance),
-      // intercepted by the proxy so no need for implementation,
-      // but needed to prevent set errors
+      //被代理拦截所以不需要实现，但要防止设置错误
       set: NOOP
     })
   })
@@ -513,14 +547,20 @@ export function createDevRenderContext(instance: ComponentInternalInstance) {
   return target as ComponentRenderContext
 }
 
-// dev only
+
+//仅开发模式
+//暴露props在渲染上下文
 export function exposePropsOnRenderContext(
-  instance: ComponentInternalInstance
+  instance: ComponentInternalInstance //组件实例
 ) {
+
+  //获取组件实例上下文 和 props设置
   const {
     ctx,
     propsOptions: [propsOptions]
   } = instance
+
+  //如果存在props设置
   if (propsOptions) {
     Object.keys(propsOptions).forEach(key => {
       Object.defineProperty(ctx, key, {
